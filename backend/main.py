@@ -1,7 +1,9 @@
 import asyncio
 from contextlib import asynccontextmanager, suppress
 from datetime import datetime, timezone
+from fastapi.middleware.cors import CORSMiddleware
 from pathlib import Path
+from typing import Literal
 import sys
 import uuid
 
@@ -46,6 +48,16 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+    ],
+    allow_credentials=False,
+    allow_methods=["GET", "POST"],
+    allow_headers=["Content-Type"],
+)
 
 class WearableReading(BaseModel):
     device_id: str = "WATCH-001"
@@ -58,6 +70,13 @@ class WearableReading(BaseModel):
     location_accuracy_m: float | None = Field(default=None, ge=0)
     wearer_response: str | None = None
 
+class IncidentStatusUpdate(BaseModel):
+    status: Literal[
+        "OPEN",
+        "ACKNOWLEDGED",
+        "DISPATCHED_SIMULATED",
+        "CLOSED",
+    ]
 
 def store_incident(reading: dict, result: dict) -> str:
     incident_id = str(uuid.uuid4())
@@ -109,7 +128,8 @@ def receive_reading(reading: WearableReading):
     incident_id = None
 
     if result.get("action") == "SEND_EMERGENCY_ALERT":
-        incident_id = store_incident(data, result)
+        incident_reading = result.pop("_reading", data)
+        incident_id = store_incident(incident_reading, result)
 
     return {
         "device_id": data["device_id"],
@@ -157,6 +177,40 @@ def list_incidents():
 
     return [dict(row) for row in rows]
 
+@app.post("/incidents/{incident_id}/status")
+def update_incident_status(
+    incident_id: str,
+    update: IncidentStatusUpdate,
+):
+    with get_connection() as connection:
+        row = connection.execute(
+            "SELECT incident_id FROM incidents WHERE incident_id = ?",
+            (incident_id,),
+        ).fetchone()
+
+        if row is None:
+            raise HTTPException(
+                status_code=404,
+                detail="Incident not found",
+            )
+
+        connection.execute(
+            "UPDATE incidents SET status = ? WHERE incident_id = ?",
+            (update.status, incident_id),
+        )
+
+        updated = connection.execute(
+            "SELECT * FROM incidents WHERE incident_id = ?",
+            (incident_id,),
+        ).fetchone()
+
+    return {
+        "incident": dict(updated),
+        "simulation_mode": True,
+        "message": (
+            "Status updated locally. No real emergency service was contacted."
+        ),
+    }
 
 @app.get("/incidents/{incident_id}")
 def get_incident(incident_id: str):
