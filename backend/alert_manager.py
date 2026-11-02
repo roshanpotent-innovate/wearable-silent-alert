@@ -12,17 +12,21 @@ class AlertManager:
 
     def process_reading(self, reading):
         with self.lock:
-            # Explicit SOS always takes priority.
             if reading.get("explicit_sos") is True:
                 self.pending_alert = None
-                return self._emergency("Explicit SOS activated")
-
-            # Process explicit wearer responses.
+                return self._emergency("Explicit SOS activated", reading)
+            
             response = reading.get("wearer_response")
 
             if response == "HELP":
+                original_reading = (
+                    self.pending_alert["reading"].copy()
+                    if self.pending_alert is not None
+                    else {}
+                )
+                original_reading.update(reading)
                 self.pending_alert = None
-                return self._emergency("Wearer requested help")
+                return self._emergency("Wearer requested help", original_reading)
 
             if response == "SAFE":
                 if self.pending_alert is not None:
@@ -39,14 +43,15 @@ class AlertManager:
                     "reason": "No pending alert",
                 }
 
-            # Check whether an existing confirmation timer expired.
             if self.pending_alert is not None:
                 elapsed = time.monotonic() - self.pending_alert["started_at"]
 
                 if elapsed >= self.confirmation_timeout:
+                    original_reading = self.pending_alert["reading"]
                     self.pending_alert = None
                     return self._emergency(
-                        "Confirmation timeout expired"
+                        "Confirmation timeout expired",
+                        original_reading,
                     )
 
                 return {
@@ -58,16 +63,16 @@ class AlertManager:
                     ),
                 }
 
-            # Evaluate new sensor readings.
             result = evaluate_reading(reading)
 
             if result["action"] == "SEND_EMERGENCY_ALERT":
-                return result
+                return {**result, "_reading": reading}
 
             if result["action"] == "REQUEST_CONFIRMATION":
                 self.pending_alert = {
                     "started_at": time.monotonic(),
                     "reason": result["reason"],
+                    "reading": reading.copy(),
                 }
 
                 return {
@@ -80,7 +85,7 @@ class AlertManager:
             return result
 
     def check_timeout(self):
-        """Check the timer independently of incoming sensor readings."""
+        """Escalate a pending alert when its timer expires."""
         with self.lock:
             if self.pending_alert is None:
                 return None
@@ -96,13 +101,23 @@ class AlertManager:
                     ),
                 }
 
+            original_reading = self.pending_alert["reading"]
             self.pending_alert = None
-            return self._emergency("Confirmation timeout expired")
+
+            return self._emergency(
+                "Confirmation timeout expired",
+                original_reading,
+            )
 
     @staticmethod
-    def _emergency(reason):
-        return {
+    def _emergency(reason, reading=None):
+        result = {
             "alert_level": "EMERGENCY",
             "action": "SEND_EMERGENCY_ALERT",
             "reason": reason,
         }
+
+        if reading is not None:
+            result["_reading"] = reading
+
+        return result

@@ -1,4 +1,5 @@
-from contextlib import asynccontextmanager
+import asyncio
+from contextlib import asynccontextmanager, suppress
 from datetime import datetime, timezone
 from pathlib import Path
 import sys
@@ -15,12 +16,27 @@ from database import get_connection, initialize_database
 
 
 manager = AlertManager(confirmation_timeout=15)
+async def monitor_confirmation_timeout():
+    while True:
+        result = manager.check_timeout()
 
+        if result and result.get("action") == "SEND_EMERGENCY_ALERT":
+            reading = result.pop("_reading", {})
+            store_incident(reading, result)
+
+        await asyncio.sleep(1)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     initialize_database()
-    yield
+    timer_task = asyncio.create_task(monitor_confirmation_timeout())
+
+    try:
+        yield
+    finally:
+        timer_task.cancel()
+        with suppress(asyncio.CancelledError):
+            await timer_task
 
 
 app = FastAPI(
