@@ -20,11 +20,19 @@ from database import get_connection, initialize_database
 manager = AlertManager(confirmation_timeout=15)
 async def monitor_confirmation_timeout():
     while True:
-        result = manager.check_timeout()
+        results = manager.check_timeouts()
 
-        if result and result.get("action") == "SEND_EMERGENCY_ALERT":
-            reading = result.pop("_reading", {})
-            store_incident(reading, result)
+        for result in results:
+            if result.get("action") == "SEND_EMERGENCY_ALERT":
+                reading = result.get("_reading", {}).copy()
+
+                incident_result = {
+                    key: value
+                    for key, value in result.items()
+                    if key != "_reading"
+                }
+
+                store_incident(reading, incident_result)
 
         await asyncio.sleep(1)
 
@@ -69,6 +77,10 @@ class WearableReading(BaseModel):
     longitude: float | None = Field(default=None, ge=-180, le=180)
     location_accuracy_m: float | None = Field(default=None, ge=0)
     wearer_response: str | None = None
+
+class WearerResponse(BaseModel):
+    device_id: str = "WATCH-001"
+    response: Literal["SAFE", "HELP"]
 
 class IncidentStatusUpdate(BaseModel):
     status: Literal[
@@ -142,26 +154,37 @@ def receive_reading(reading: WearableReading):
 
 
 @app.post("/wearable/response")
-def receive_response(payload: dict):
-    response = payload.get("response")
+def receive_response(payload: WearerResponse):
+    data = payload.model_dump()
 
-    if response not in ("SAFE", "HELP"):
-        raise HTTPException(
-            status_code=422,
-            detail="response must be SAFE or HELP",
-        )
+    result = manager.process_reading({
+        "device_id": data["device_id"],
+        "wearer_response": data["response"],
+    })
 
-    result = manager.process_reading({"wearer_response": response})
     incident_id = None
 
     if result.get("action") == "SEND_EMERGENCY_ALERT":
+        incident_reading = result.get("_reading", {}).copy()
+
+        incident_result = {
+            key: value
+            for key, value in result.items()
+            if key != "_reading"
+        }
+
         incident_id = store_incident(
-            {"device_id": "WATCH-001"},
-            result,
+            incident_reading,
+            incident_result,
         )
 
     return {
-        "result": result,
+        "device_id": data["device_id"],
+        "result": {
+            key: value
+            for key, value in result.items()
+            if key != "_reading"
+        },
         "incident_id": incident_id,
         "delivery_status": "SIMULATED" if incident_id else None,
         "simulation_mode": True,
