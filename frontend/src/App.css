@@ -413,3 +413,284 @@ footer {
     gap: 16px 10px;
   }
 }
+
+/* =====================================
+   WEARABLE DEVICE SIMULATOR
+===================================== */
+
+.simulator-panel {
+  margin-bottom: 22px;
+}
+
+.simulator-panel .panel-heading {
+  align-items: center;
+}
+
+.device-input-group {
+  display: grid;
+  grid-template-columns: 160px minmax(180px, 320px);
+  align-items: center;
+  gap: 10px 16px;
+  margin: 20px 0 25px;
+}
+
+.device-input-group label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #344054;
+}
+
+.device-input-group input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #d9e0ea;
+  border-radius: 6px;
+  background: #fff;
+  color: #172033;
+  font-size: 13px;
+  outline: none;
+}
+
+.device-input-group input:focus {
+  border-color: #2456a6;
+}
+
+.device-input-group span {
+  grid-column: 2;
+  color: #788397;
+  font-size: 11px;
+}
+
+.simulator-subheading {
+  margin: 0 0 13px;
+  font-size: 15px;
+}
+
+.scenario-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 13px;
+}
+
+.scenario-card {
+  display: flex;
+  min-height: 150px;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 16px;
+  border: 1px solid #e1e6ee;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.scenario-card h4 {
+  margin: 0;
+  color: #25334a;
+  font-size: 14px;
+}
+
+.scenario-card p {
+  margin-top: 7px;
+  color: #697386;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.scenario-button {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 750;
+  transition: background 0.15s ease;
+}
+
+.scenario-normal {
+  border-color: #b9d9ca;
+  background: #edf8f2;
+  color: #176b45;
+}
+
+.scenario-normal:hover:not(:disabled) {
+  background: #dff1e7;
+}
+
+.scenario-warning {
+  border-color: #eed49d;
+  background: #fff7e8;
+  color: #87530e;
+}
+
+.scenario-warning:hover:not(:disabled) {
+  background: #ffedca;
+}
+
+.scenario-danger {
+  border-color: #efb6b6;
+  background: #fff0f0;
+  color: #ae2931;
+}
+
+.scenario-danger:hover:not(:disabled) {
+  background: #ffe1e1;
+}
+
+/* Wearer confirmation controls */
+
+.response-section {
+  margin-top: 25px;
+  padding-top: 20px;
+  border-top: 1px solid #e7ebf1;
+}
+
+.response-section h3 {
+  margin: 0;
+  font-size: 15px;
+}
+
+.response-section > div:first-child p {
+  margin-top: 6px;
+  color: #697386;
+  font-size: 12px;
+}
+
+.response-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.safe-button,
+.help-button {
+  padding: 10px 15px;
+  border: 1px solid;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.safe-button {
+  border-color: #b9d9ca;
+  background: #edf8f2;
+  color: #176b45;
+}
+
+.safe-button:hover:not(:disabled) {
+  background: #dff1e7;
+}
+
+.help-button {
+  border-color: #efb6b6;
+  background: #fff0f0;
+  color: #ae2931;
+}
+
+.help-button:hover:not(:disabled) {
+  background: #ffe1e1;
+}
+
+.pending-alert {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  margin-top: 16px;
+  padding: 14px 16px;
+  border: 1px solid #eed49d;
+  border-radius: 7px;
+  background: #fff8e8;
+}
+
+.pending-alert strong {
+  color: #80520e;
+  font-size: 13px;
+}
+
+.pending-alert p {
+  margin-top: 5px;
+  color: #856a3b;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.pending-alert .countdown {
+  flex-shrink: 0;
+  font-size: 24px;
+}
+
+.response-hint {
+  margin-top: 13px;
+  color: #8790a0;
+  font-size: 11px;
+}
+
+.success-banner {
+  margin-top: 17px;
+  padding: 12px 15px;
+  border: 1px solid #b9d9ca;
+  border-radius: 7px;
+  background: #edf8f2;
+  color: #176b45;
+  font-size: 12px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.simulator-note {
+  margin-top: 15px;
+  padding: 11px 13px;
+  border-radius: 6px;
+  background: #f3f5f9;
+  color: #657187;
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+/* API connection indicator */
+
+.status-dot.online {
+  background: #16a36a;
+}
+
+.status-dot.offline {
+  background: #c8333c;
+}
+
+/* Responsive simulator layout */
+
+@media (max-width: 1000px) {
+  .scenario-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 650px) {
+  .scenario-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .device-input-group {
+    grid-template-columns: 1fr;
+  }
+
+  .device-input-group span {
+    grid-column: 1;
+  }
+
+  .response-buttons {
+    flex-direction: column;
+  }
+
+  .safe-button,
+  .help-button {
+    width: 100%;
+  }
+
+  .simulator-panel .panel-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
