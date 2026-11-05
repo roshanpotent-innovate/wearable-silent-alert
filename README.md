@@ -90,8 +90,6 @@ The prototype consists of three main layers:
 
 ## 5. Project Structure
 
-## Project Structure
-
 ```text
 wearable-silent-alert/
 │

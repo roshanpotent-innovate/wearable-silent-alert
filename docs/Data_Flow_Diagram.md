@@ -683,65 +683,82 @@ This separation allows the system to manage active confirmation processes in mem
 
 The following diagram summarizes the complete emergency-processing workflow.
 
-```mermaid
-flowchart TD
-    A["WEARABLE SIMULATOR"]
-    B["FASTAPI BACKEND"]
-    C["ALERT MANAGER"]
-    D{"Explicit SOS?"}
-
-    E["Immediate SOS Escalation"]
-    F{"Wearer Response or Pending State?"}
-    G["Process SAFE / HELP"]
-    H["Check Existing Pending Alert"]
-    I["DETECTION ENGINE"]
-    J{"Detection Result"}
-
-    K["NORMAL: Continue Monitoring"]
-    L["SUSPICIOUS: Create Pending Alert"]
-    M["EMERGENCY: Immediate Escalation"]
-
-    N["SAFE: Cancel Pending Alert"]
-    O["HELP: Emergency Escalation"]
-    P["TIMEOUT MONITOR: Automatic Escalation"]
-
-    Q["FASTAPI INCIDENT CREATION"]
-    R[("SQLITE DATABASE")]
-    S["FASTAPI INCIDENT API"]
-    T["REACT DASHBOARD"]
-    U["OPERATOR"]
-
-    A --> B --> C --> D
-
-    D -->|Yes| E
-    D -->|No| F
-
-    F -->|Response| G
-    F -->|No Response| H
-
-    H -->|Pending Exists| K
-    H -->|No Pending| I
-
-    I --> J
-    J -->|NORMAL| K
-    J -->|SUSPICIOUS| L
-    J -->|EMERGENCY| M
-
-    G -->|SAFE| N
-    G -->|HELP| O
-
-    L -.->|15-second expiry| P
-
-    E --> Q
-    M --> Q
-    O --> Q
-    P --> Q
-
-    Q --> R
-    R --> S
-    S <--> T
-    T <--> U
-```
+START
+  |
+  v
+Incoming Wearable Reading
+  |
+  v
+Pending Alert Exists?
+  |
+  +---------------- YES ----------------------+
+  |                                           |
+  NO                                          v
+  |                              Confirmation Timeout Expired?
+  v                                           |
+Evaluate Reading                   +----------+----------+
+  |                                |                     |
+  v                               YES                   NO
+Detection Result                   |                     |
+  |                                v                     v
+  |                       Remove Pending Alert    SUSPICIOUS:
+  |                                |               Waiting for
+  |                                |               Confirmation
+  |                                |
+  |                                |
+  |                                +------------
+  +---- NORMAL -----> Continue Monitoring      |
+  |                                            |
+  +---- SUSPICIOUS                             |
+  |        |                                   |
+  |        v                                   |
+  |   Request Wearer Confirmation              |
+  |        |                                   |
+  |        v                                   |
+  |   Store Pending Alert                      |
+  |        |                                   |
+  |        v                                   |
+  |   Start 15-Second Timer                    |
+  |        |                                   |
+  |        v                                   |
+  |   Wearer Response                          |
+  |        |                                   |
+  |        +----------+-------------+          |
+  |        |          |             |          |
+  |       SAFE    No Response      HELP        |
+  |        |          |             |          |
+  |        v          v             |          |
+  |   Cancel       Timeout          |          |
+  |   Pending      Monitor          |          |
+  |   Alert          |              |          |
+  |                  v              |          |
+  |          15 Seconds Expired?    |          |
+  |                  |              |          |
+  |             +----+----+         |          |
+  |             |         |         |          |
+  |            NO        YES        |          |
+  |             |         |         |          |
+  |             v         v         |          |
+  |          Timeout   Remove       |          |
+  |          Monitor   Pending      |          |
+  |                    Alert        |          |
+  |                      |          |          |
+  |                      v          |          |
+  +---------------- Generate Emergency Alert   |
+  |                                            |                    
+  +---- EMERGENCY -----------------------------+
+                                               |
+                                               v
+                                  Generate Emergency Alert
+                                               |
+                                               v
+                                  Store Incident in SQLite
+                                               |
+                                               v
+                                  Delivery Status: SIMULATED
+                                               |
+                                               v
+                                              END
 
 ## 15. Important Implementation Limitations
 

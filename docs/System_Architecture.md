@@ -209,6 +209,7 @@ The current implementation follows these rules:
 | Gesture + high heart rate, acknowledgement missing | SUSPICIOUS / REQUEST_CONFIRMATION |
 | Gesture + high heart rate, acknowledgement false | EMERGENCY / SEND_EMERGENCY_ALERT |
 | Gesture + high heart rate, acknowledgement true | NORMAL / CONTINUE_MONITORING |
+| Heart rate unavaliable and gesture detected | SUSPICIOUS / REQUEST_CONFIRMATION |
 
 Explicit SOS is also supported by the detection logic. However, during normal API processing, the Alert Manager intercepts explicit SOS before the Detection Engine is invoked and escalates it immediately.
 

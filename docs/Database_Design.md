@@ -242,20 +242,33 @@ Incident records are inserted into the database through the `store_incident()` f
 
 ### 6.1 Incident Creation Flow
 
-```mermaid
-flowchart TD
-    A["Emergency Detection"] --> B["Alert Manager"]
-    B --> C["Emergency Result Generated"]
-    C --> D["FastAPI Backend"]
-    D --> E["store_incident()"]
-    E --> F["Generate Incident ID and UTC Timestamp"]
-    F --> G["Extract Incident Information"]
-    G --> H["Insert Record into SQLite"]
-    H --> I["Incident Stored"]
-    I --> J{"Incident Creation Source?"}
-    J -->|"API Request"| K["Return Incident ID in API Response"]
-    J -->|"Background Timeout Monitor"| L["Continue Background Monitoring"]
-```
+            Emergency Condition Detected
+                        |
+                        |
+            Incident Creation Source?
+                 |               |________________
+                 |                                |
+            API Request                  Confirmation Timeout
+                 |                                |
+                 |                                |
+            POST/wearable/reading or     Background Timeout Monitor
+            /wearable/response                   |
+                 |                                |
+                 |                        Extract Original Pending
+            Extract Wearable Reading     Reading and Alert Result
+            and Alert Result                     |
+                 |            ___________________|
+                 |           |
+            Generate Incident ID
+            and Timestamp
+                 |
+                 |
+            Insert Incident into
+            SQLite Database
+                 |
+                 |
+            Incident Stored with
+            SIMULATED Delivery Status
 
 ### 6.2 Stored Information
 

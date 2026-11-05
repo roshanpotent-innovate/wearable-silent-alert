@@ -557,46 +557,30 @@ The `DISPATCHED_SIMULATED` status represents a simulated dispatch action and doe
 
 The following diagram illustrates the relationship between the frontend, API endpoints, Alert Manager, and database.
 
-```mermaid
-flowchart TD
-    A["React Frontend Simulator"] --> B["FastAPI Backend"]
+          POST/wearable/response
+                  |
+                  |
+            Validate Request
+                  |
+                  |
+              Response
+                |   |
+                |   |___________________
+              SAFE                      |
+                |                      HELP
+                |                       |
+          Cancel Pending Alert     Process Emergency Request
+                |                       |
+                |                       |
+            Return Response        Generate Emergency Result
+          No Incident Created           |
+                                        |
+                                   Store Incident in SQLite
+                                        |
+                                        |
+                                    Return Response
+                                  Incident ID Generated
 
-    B --> C["POST /wearable/reading"]
-    B --> D["POST /wearable/response"]
-
-    C --> E["Alert Manager"]
-    D --> E
-
-    E --> F{"Explicit SOS or HELP?"}
-
-    F -->|Yes| H["Generate Emergency Result"]
-    F -->|No| G{"Pending Confirmation?"}
-
-    G -->|Yes| I["Wait for Response or Timeout"]
-    G -->|No| J["Detection Engine"]
-
-    J --> K{"Detection Result"}
-    K -->|Normal| L["Continue Monitoring"]
-    K -->|Suspicious| M["Request Confirmation"]
-    K -->|Emergency| H
-
-    H --> N["FastAPI Stores Incident"]
-    N --> O["SQLite Database"]
-
-    L --> P["Return API Response"]
-    M --> P
-    I --> P
-    O --> P
-    P --> A
-
-    B --> Q["GET /incidents"]
-    B --> R["GET /incidents/{id}"]
-    B --> S["POST /incidents/{id}/status"]
-
-    Q --> O
-    R --> O
-    S --> O
-```
 
 The frontend also periodically retrieves incident records to refresh the incident dashboard.
 
