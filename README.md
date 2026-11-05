@@ -367,3 +367,14 @@ These are future development directions and are not implemented features of the 
 **Project:** Wearable Silent Emergency Alert Band  
 **Repository:** [GitHub](https://github.com/roshanpotent-innovate/wearable-silent-alert)  
 **Project Type:** Software simulation prototype
+
+## Hardware Implementation Concept
+
+The following image illustrates the proposed physical implementation
+of the Wearable Silent Emergency Alert Band.
+
+![Wearable Silent Emergency Alert Band - Hardware Concept](docs/images/alert_watch.jpg)
+
+**Note:** The current project is implemented as a software-based
+simulation prototype. Physical sensor integration and hardware
+implementation are planned for future development.
